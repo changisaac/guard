@@ -1,0 +1,11 @@
+int8 flags
+float32 latitude
+float32 longitude
+float32 altitude
+float32 speed
+float32 bearing
+float32 accuracy
+float32 timestamp
+float32 verticalAccuracy
+float32 bearingAccuracy
+float32 speedAccuracy
