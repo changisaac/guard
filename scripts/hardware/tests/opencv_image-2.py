@@ -16,19 +16,38 @@ class image_converter:
     self.image_pub = rospy.Publisher("image_topic_tamim",Image)
 
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/camera/color/image_raw",Image,self.callback)
-
-  def callback(self,data):
+    #self.image_sub_1 = rospy.Subscriber("/cam_1/color/image_raw",Image,self.callback_1)
+    self.image_sub_2 = rospy.Subscriber("/cam_2/color/image_raw",Image,self.callback_2)
+  
+  def callback_1(self,data):
     try:
       cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
     except CvBridgeError as e:
       print(e)
 
-    (rows,cols,channels) = cv_image.shape
-    if cols > 60 and rows > 60 :
-      cv2.circle(cv_image, (50,50), 10, 255)
+    #(rows,cols,channels) = cv_image.shape
+    #if cols > 60 and rows > 60 :
+    #  cv2.circle(cv_image, (50,50), 10, 255)
 
-    cv2.imshow("Image window", cv_image)
+    cv2.imshow("Image window 1", cv_image)
+    cv2.waitKey(3)
+
+    try:
+      self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, "bgr8"))
+    except CvBridgeError as e:
+      print(e)
+
+  def callback_2(self,data):
+    try:
+      cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+    except CvBridgeError as e:
+      print(e)
+
+    #(rows,cols,channels) = cv_image.shape
+    #if cols > 60 and rows > 60 :
+    #  cv2.circle(cv_image, (50,50), 10, 255)
+
+    cv2.imshow("Image window 2", cv_image)
     cv2.waitKey(3)
 
     try:

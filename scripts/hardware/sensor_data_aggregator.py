@@ -33,16 +33,21 @@ class SensorDataAggregator:
         self.bridge = CvBridge()
 
         # sensor data topics
-        self.rgb_image_topic = "/camera/color/image_raw"
+        self.rgb_image_topic_1 = "/cam_1/color/image_raw"
+        self.rgb_image_topic_2 = "/cam_2/color/image_raw"
         #self.imu_topic = "/imu"
 
         # sensor data subscribers
-        rospy.Subscriber(self.rgb_image_topic, Image, self.rgb_image_cb)
+        rospy.Subscriber(self.rgb_image_topic_1, Image, self.rgb_image_cb_1)
+        rospy.Subscriber(self.rgb_image_topic_2, Image, self.rgb_image_cb_2)
         #rospy.Subscriber(self.imu_topic, Imu, self.imu_cb)
 
-    def rgb_image_cb(self, data):
-        self.write_bag(self.rgb_image_topic, data)        
+    def rgb_image_cb_1(self, data):
+        self.write_bag(self.rgb_image_topic_1, data)        
 
+    def rgb_image_cb_2(self, data):
+        self.write_bag(self.rgb_image_topic_2, data)        
+    
     def gps_cb(self, data):
         pass
     
