@@ -12,6 +12,7 @@ import rosbag
 
 # default library imports
 import sys
+import os
 
 # ROS msg imports
 # all possible msg types need to be imported and then placed into
@@ -60,7 +61,7 @@ class SensorDataAggregator:
             
     # inits a bag file with unix time stamp in name and returns it
     def init_bag(self):
-        file_name = "guard_" + self.bag_name + "_" + str(rospy.Time.now()) + ".bag"
+        file_name = self.bag_name + "_" + str(rospy.Time.now()) + ".bag"
         bag = rosbag.Bag(file_name, "w")
         bag._set_chunk_threshold(self.max_bag_size_bytes)
         return bag
@@ -70,22 +71,28 @@ class SensorDataAggregator:
 
 def main():
     rospy.init_node("sensor_data_aggregator", anonymous=True)
-    #rospy.on_shutdown()
+   
+    directory = os.getcwd() + "/guard_log_" + str(rospy.Time.now())
     
+    try:
+        os.mkdir(directory)
+    except OSError:
+        rospy.logerr("Creation of the directory %s failed" % directory)
+
     # SensorDataAggregator relies on rospy.get_rostime()
     # this needs the node to be initialized
     cam_1_agg = SensorDataAggregator(
-        "cam_1_rgb_image",
+        directory + "/cam_1_rgb_image",
         [("/cam_1/color/image_raw", "Image")],
         100000000)
     
     cam_2_agg = SensorDataAggregator(
-        "cam_2_rgb_image",
+        directory + "/cam_2_rgb_image",
         [("/cam_2/color/image_raw", "Image")],
         100000000)
 
     imu_agg = SensorDataAggregator(
-        "cam_2_imu",
+        directory + "/cam_2_imu",
         [("/cam_2/gyro/sample", "Imu")],
         50000000) 
     
