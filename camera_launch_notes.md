@@ -1,3 +1,4 @@
+- D435i needs to be in top right USB 3.0 port
 - launch D435 first by serial number
 - then launch D435i second by serial number
 - use 5_11_11_100 firmware for each camera

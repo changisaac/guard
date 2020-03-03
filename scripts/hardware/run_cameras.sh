@@ -8,8 +8,8 @@ roslaunch realsense2_camera rs_camera.launch camera:=cam_1 serial_no:=9441220743
 echo "pid of camera 1" + "$!"
 camera_1_pid=$!
 
-echo "Waiting 30 seconds for camera 1 to start up..."
-sleep 30
+echo "Waiting 45 seconds for camera 1 to start up..."
+sleep 45
 echo "Camera 1 should be up"
 #Camera 1----------------------------------
 

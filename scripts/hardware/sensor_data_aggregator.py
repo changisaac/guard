@@ -16,46 +16,35 @@ import cv2
 from cv_bridge import CvBridge, CvBridgeError
 
 # ROS msg imports
+# all possible msg types need to be imported and then placed into
+# the MSG_TYPE dictionary in thein init of the SensorDataAggregator
 from std_msgs.msg import String
 from sensor_msgs.msg import Image
 from sensor_msgs.msg import Imu
-
+from realsense2_camera.msg import IMUInfo
 
 """
-Class subscribes to each sensor type and data channel and 
-stores messages to rosbag.
+Class subscribes to specified data topics and 
+stores all messages from those topics  to a single rosbag.
 """
 class SensorDataAggregator:
 
-    def __init__(self):
-        self.max_bag_size_bytes = 500000000
+    MSG_TYPE = {"Image": Image, "ImuInfo": IMUInfo, "Imu": Imu} 
+
+    def __init__(self, bag_name, topic_msg_list, max_bag_size_bytes):
+        self.bag_name = bag_name
+        self.topic_msg_list = topic_msg_list
+        self.max_bag_size_bytes = max_bag_size_bytes
+       
+        # init first bag
         self.bag = self.init_bag()
-        self.bridge = CvBridge()
+        
+        # init all data topics subscribers
+        for topic, msg in self.topic_msg_list:
+            rospy.Subscriber(topic, self.MSG_TYPE[msg], self.callback, topic)
 
-        # sensor data topics
-        self.rgb_image_topic_1 = "/cam_1/color/image_raw"
-        self.rgb_image_topic_2 = "/cam_2/color/image_raw"
-        #self.imu_topic = "/imu"
-
-        # sensor data subscribers
-        rospy.Subscriber(self.rgb_image_topic_1, Image, self.rgb_image_cb_1)
-        rospy.Subscriber(self.rgb_image_topic_2, Image, self.rgb_image_cb_2)
-        #rospy.Subscriber(self.imu_topic, Imu, self.imu_cb)
-
-    def rgb_image_cb_1(self, data):
-        self.write_bag(self.rgb_image_topic_1, data)        
-
-    def rgb_image_cb_2(self, data):
-        self.write_bag(self.rgb_image_topic_2, data)        
-    
-    def gps_cb(self, data):
-        pass
-    
-    def obd_steering_accel_cb(self, data):
-        pass
-
-    def imu_cb(self, data):
-        self.write_bag(self.imu_topic, data)
+    def callback(self, data, args):
+        self.write_bag(args, data)        
 
     # writes to rosbag but keeps track of max file size, if passed, make new bag 
     def write_bag(self, topic, msg):
@@ -73,7 +62,7 @@ class SensorDataAggregator:
             
     # inits a bag file with unix time stamp in name and returns it
     def init_bag(self):
-        file_name = "guard_" + str(rospy.Time.now()) + ".bag"
+        file_name = "guard_" + self.bag_name + "_" + str(rospy.Time.now()) + ".bag"
         bag = rosbag.Bag(file_name, "w")
         bag._set_chunk_threshold(self.max_bag_size_bytes)
         return bag
@@ -87,7 +76,16 @@ def main():
     
     # SensorDataAggregator relies on rospy.get_rostime()
     # this needs the node to be initialized
-    agg = SensorDataAggregator()
+    agg = SensorDataAggregator(
+        "cam_2_rgb_image",
+        [("/cam_2/color/image_raw", "Image")],
+        50000000)
+
+    imu_agg = SensorDataAggregator(
+        "cam_2_imu",
+        [("/cam_2/gyro/sample", "Imu")],
+        50000000) 
+    
     rospy.spin()
 
 if __name__ == '__main__':
