@@ -12,8 +12,6 @@ import rosbag
 
 # default library imports
 import sys
-import cv2
-from cv_bridge import CvBridge, CvBridgeError
 
 # ROS msg imports
 # all possible msg types need to be imported and then placed into
@@ -76,10 +74,15 @@ def main():
     
     # SensorDataAggregator relies on rospy.get_rostime()
     # this needs the node to be initialized
-    agg = SensorDataAggregator(
+    cam_1_agg = SensorDataAggregator(
+        "cam_1_rgb_image",
+        [("/cam_1/color/image_raw", "Image")],
+        100000000)
+    
+    cam_2_agg = SensorDataAggregator(
         "cam_2_rgb_image",
         [("/cam_2/color/image_raw", "Image")],
-        50000000)
+        100000000)
 
     imu_agg = SensorDataAggregator(
         "cam_2_imu",
