@@ -11,7 +11,7 @@ catkin-pkg==0.4.16
 catkin-pkg-modules==0.4.16
 chardet==3.0.4
 configobj==5.0.6
-cryptography==2.1.4
+cryptography==2.3
 cv-bridge==1.13.0
 defusedxml==0.5.0
 diagnostic-updater==1.9.3
