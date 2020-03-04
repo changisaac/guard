@@ -13,6 +13,8 @@ cmd_compress = "rosbag compress --output-dir=%s *.bag"
 cmd_archive = (["tar", "cfv", "guard_user_%s_%s.tar"])
 cmd_mv_archive = (["mv"])
 
+CMD_FILE_IDX = 2
+
 def collectArguments():
 	parser = argparse.ArgumentParser(description='Compress and archive bag files')
 	parser.add_argument('--user', '-u', default='default', help='Name to append on archive')
@@ -25,9 +27,7 @@ def collectArguments():
 	return args.user, args.directory, args.archive
 
 def compress(directory, compressed_directory):
-	print "CMD: ", cmd_compress
 	try:
-		print "CHANGING TO DIRECTORY %s" % directory
 		os.chdir(directory)
 		print "COMPRESSING BAG FILES"
 		sp.call(cmd_compress % compressed_directory, shell=True)
@@ -37,13 +37,11 @@ def compress(directory, compressed_directory):
 	print "COMPRESSION COMPLETE"
 
 def archive(user, directory, archive_directory):
-	cmd_archive[2] = cmd_archive[2] % (user, strftime("%Y-%m-%d_%H_%M_%S", gmtime()))
+	cmd_archive[CMD_FILE_IDX] = cmd_archive[CMD_FILE_IDX] % (user, strftime("%Y-%m-%d_%H_%M_%S", gmtime()))
 	
 	# Set the archive filename and directory it should be moved to
-	cmd_mv_archive.append(cmd_archive[2])
+	cmd_mv_archive.append(cmd_archive[CMD_FILE_IDX])
 	cmd_mv_archive.append(archive_directory)
-
-	print "MOVE CMD: ", cmd_mv_archive
 
 	# Select all the files to archive
 	os.chdir(directory)
