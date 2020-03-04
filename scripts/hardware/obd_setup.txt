@@ -1,0 +1,63 @@
+Instructions for setting up panda
+
+run "make" in cereal directory
+
+Do all the setup in in openpilot-tools
+https://github.com/commaai/openpilot-tools/blob/master/README.md
+
+RUN the following in the device being used, these are ubuntu specific
+
+cd /tmp \
+&& wget https://github.com/zeromq/libzmq/archive/v4.3.2.tar.gz \
+&& tar xvf v4.3.2.tar.gz \
+&& rm v4.3.2.tar.gz \
+&& cd libzmq-4.3.2 \
+&& ./autogen.sh \
+&& ./configure \
+&& make check \
+&& make install \
+&& ldconfig \
+&& cd .. \
+&& rm -rf libzmq-4.3.2
+
+cd /tmp \
+&& wget https://github.com/zeromq/czmq/archive/v4.2.0.tar.gz \
+&& tar xvf v4.2.0.tar.gz \
+&& rm v4.2.0.tar.gz \
+&& cd czmq-4.2.0 \
+&& ./autogen.sh && ./configure && make check \
+&& make install \
+&& ldconfig \
+&& cd .. \
+&& rm -rf czmq-4.2.0
+
+cd /tmp \
+&& curl -O https://capnproto.org/capnproto-c++-0.6.1.tar.gz \
+&& tar xvf capnproto-c++-0.6.1.tar.gz \
+&& cd capnproto-c++-0.6.1 \
+&& ./configure --prefix=/usr/local CPPFLAGS=-DPIC CFLAGS=-fPIC CXXFLAGS=-fPIC LDFLAGS=-fPIC --disable-shared --enable-static \
+&& make -j4 \
+&& make install \
+&& cd .. \
+&& rm -rf capnproto-c++-0.6.1 \
+&& rm capnproto-c++-0.6.1.tar.gz
+
+cd /tmp \
+&& git clone https://github.com/commaai/c-capnproto.git \
+&& cd c-capnproto \
+&& git submodule update --init --recursive \
+&& autoreconf -f -i -s \
+&& CFLAGS="-fPIC" ./configure --prefix=/usr/local \
+&& make -j4 \
+&& make install \
+&& cd .. \
+&& rm -rf c-capnproto
+
+
+
+
+Finally run "make all"
+
+
+
+NOTE: If you get any permission denied, just use sudo or sudo bash but get out of root in the later steps
