@@ -2,34 +2,58 @@ import rosbag
 import os
 import subprocess as sp 
 from time import gmtime, strftime
+import argparse
 
-bag_directory = "/home/tamim/bagfiles/"
-compressed_bag_directory = "/home/tamim/bagfiles/compressed"
+default_bag_directory = "/home/tamim/bagfiles/"
 
-# Need to make this one a string, presumably because 
-# shell=True for this command
-cmd_compress = "rosbag compress --output-dir=%s *.bag" % compressed_bag_directory 
-cmd_archive = (["tar", "cfv", "ros_bags_%s.tar"])
+# Need to make this one a string, presumably 
+# because shell=True for this command
+cmd_compress = "rosbag compress --output-dir=%s *.bag" 
+cmd_archive = (["tar", "cfv", "guard_user_%s_%s.tar"])
 
-# print "CHANGING DIRECTORY TO: %s" % bag_directory
+def compress(directory, compressed_directory):
+	print "CMD: ", cmd_compress
+	try:
+		print "CHANGING TO DIRECTORY %s" % directory
+		os.chdir(directory)
+		sp.call("ls")
+		print "COMPRESSING BAG FILES"
+		sp.call(cmd_compress % compressed_directory, shell=True)
+	except:
+		print "COMPRESSION FAILED"
 
-print "CMD: ", cmd_compress
-try:
-	os.chdir(bag_directory)
+	print "COMPRESSION COMPLETE"
+
+def archive(user, directory):
+	cmd_archive[2] = cmd_archive[2] % (user, strftime("%Y-%m-%d_%H_%M_%S", gmtime()))
+
+	os.chdir(directory)
 	sp.call("ls")
-	print "COMPRESSING BAG FILES"
-	sp.call(cmd_compress, shell=True)
-except:
-	print "FAILED"
+	for filename in os.listdir(directory):
+	    if filename.endswith('.bag'):
+	        cmd_archive.append(filename)
 
-print "COMPRESSION COMPLETE"
+	print "ARCHIVING INTO: %s" % cmd_archive[2]
+	try: 
+		sp.call(cmd_archive)
+	except:
+		print "ARCHIVE FAILED"
 
-cmd_archive[2] = cmd_archive[2] % strftime("%Y-%m-%d_%H_%M_%S", gmtime())
+def collectArguments():
+	parser = argparse.ArgumentParser(description='Compress and archive bag files')
+	parser.add_argument('--user', '-u', default='default', help='Name to append on archive')
+	parser.add_argument('--directory', '-d', default=default_bag_directory,
+						help='Absolute path of directory where bag files are stored')
+	args = parser.parse_args()
 
-for filename in os.listdir(compressed_bag_directory):
-    if filename.endswith(".bag"):
-        cmd_archive.append(filename)
+	return args.user, args.directory
 
-print "CMD: ", cmd_archive
-print "ARCHIVING INTO: %s" % cmd_archive[2]
-sp.call(cmd_archive)
+def main():
+	user, directory = collectArguments()
+	compressed_directory = directory + '/compressed'
+	
+	compress(directory, compressed_directory)
+	archive(user, compressed_directory)
+
+if __name__ == '__main__':
+	main()
