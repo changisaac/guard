@@ -23,7 +23,7 @@ cmd_mv_unarchive = (["cp"])
 
 CMD_FILE_IDX = 2
 
-class Bag_Archiver():
+class BagArchiver():
 	def __init__(self, user="default", directory=default_bag_directory, 
 				 archive_directory=default_archive_directory, unarchive_directory=default_unarchive_directory):
 		self.user = user
@@ -183,7 +183,7 @@ def collectArguments():
 
 def main():
 	user, directory, archive_directory, unarchive_directory= collectArguments()
-	bagArchiver = Bag_Archiver(user=user, directory=directory, archive_directory=archive_directory, 
+	bagArchiver = BagArchiver(user=user, directory=directory, archive_directory=archive_directory, 
 							   unarchive_directory=unarchive_directory)
 	# bagArchiver.compress()
 	# bagArchiver.archive()
