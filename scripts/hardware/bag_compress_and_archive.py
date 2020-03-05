@@ -4,9 +4,13 @@ import subprocess as sp
 from time import gmtime, strftime
 import argparse
 
+# Directories
+
 default_bag_directory = "/home/tamim/bagfiles/"
 default_archive_directory = "/home/tamim/archive"
 default_unarchive_directory = "/home/tamim/unarchive"
+
+# LIST OF COMMANDS
 
 # Need to make this one a string, presumably 
 # because shell=True for this command
@@ -54,6 +58,8 @@ class Bag_Archiver():
 		else:
 			print "Successfully created the directory %s " % directory
     
+
+    # Compresses the files in the unaltered bag file directory
 	def compress(self):
 		try:
 			os.chdir(self.directory)
@@ -64,7 +70,12 @@ class Bag_Archiver():
 
 		print "COMPRESSION COMPLETE"
 
+	# Archives the compressed bag files into the archive directory
 	def archive(self):
+		# Reset cmds everytime function is called
+		cmd_mv_archive = (["mv"])
+		cmd_archive = (["tar", "czfv", "guard_user_%s_%s.tar.gz"])
+
 		cmd_archive[CMD_FILE_IDX] = cmd_archive[CMD_FILE_IDX] % (self.user, strftime("%Y-%m-%d_%H_%M_%S", gmtime()))
 	
 		# Set the archive filename and directory it should be moved to
@@ -86,15 +97,22 @@ class Bag_Archiver():
         # Move archive to archive folder
 		try:
 			sp.call(cmd_mv_archive)
-			cmd_mv_unarchive = ["mv"]
+			cmd_mv_archive = ["mv"]
 		except:
 			print "COULD NOT MOVE ARCHIVE"
     
+    # Moves the archived file from the archive directory 
+    # into the unarchived directory and then unarchives it
+    # into a new sub-directory thats based on its filename
 	def unarchive(self, filename):
+		# Reset cmds everytime function is called
+		cmd_mv_unarchive = (["cp"])
+		cmd_unarchive = (["tar", "-xzvf"])
+
 		# Go to archive directory for copying
-		file_dir = filename.split('.')[0]
 		os.chdir(self.archive_directory)
 		# Move the file to unarchive location
+		file_dir = filename.split('.')[0]
 		cmd_mv_unarchive.append(filename)
 		cmd_mv_unarchive.append(self.unarchive_directory)
 
@@ -117,6 +135,7 @@ class Bag_Archiver():
 		# Move the archive to subdirectory with its name
 		try:
 			sp.call(cmd_mv_unarchive)
+			cmd_mv_unarchive[0] = "cp"
 		except:
 			print "COULD NOT MOVE ARCHIVE to /%s" % filename
 		else:
@@ -131,10 +150,11 @@ class Bag_Archiver():
 		except:
 			print "COULD NOT UNARCHIVE"
 
+	# After unarchiving, decompresses the unarchived file
+	# into a /decompressed folder 
 	def decompress(self, directory=None):
 		if directory is not None:
 			os.chdir(directory)
-
 		try:
 			if not self.find_directory('decompressed'):
 				self.create_directory('decompressed')
@@ -168,7 +188,9 @@ def main():
 	# bagArchiver.compress()
 	# bagArchiver.archive()
 
-	bagArchiver.unarchive_and_decompress("guard_user_default_2020-03-05_04_45_01.tar.gz")
+	bagArchiver.unarchive_and_decompress("guard_user_default_2020-03-05_04_45_14.tar.gz")
+	bagArchiver.unarchive_and_decompress("guard_user_default_2020-03-05_04_45_09.tar.gz")
+	bagArchiver.unarchive_and_decompress("guard_user_default_2020-03-05_04_52_42.tar.gz")
 
 if __name__ == '__main__':
 	main()
