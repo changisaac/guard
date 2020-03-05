@@ -10,7 +10,8 @@ default_archive_directory = "/home/tamim/archive"
 # Need to make this one a string, presumably 
 # because shell=True for this command
 cmd_compress = "rosbag compress --output-dir=%s *.bag" 
-cmd_archive = (["tar", "cfv", "guard_user_%s_%s.tar"])
+cmd_archive = (["tar", "czfv", "guard_user_%s_%s.tar.gz"])
+cmd_decompress = "rosbag decompress --output-dir=%s *.bag"
 cmd_mv_archive = (["mv"])
 
 CMD_FILE_IDX = 2
@@ -33,7 +34,31 @@ class Bag_Archiver():
 	def change_archive_directory(new_archive_directory):
 		self.archive_directory = new_archive_directory
 
-	def compress(self):
+    def find_directory(self, directory):
+        return os.path.isfile(directory)
+
+    def create_directory(self, directory):
+        try:
+            os.mkdir(directory)
+        except OSError:
+            print "Creation of directory %s failed" % directory
+        else:
+            print "Successfully created the directory %s " % directory
+
+	def decompress(self):
+        try:
+            os.chdir(self.directory)
+            if not self.find_directory('decompressed'):
+                self.create_directory('decompressed')
+            
+            print "DECOMPRESSING BAG FILES"
+            sp.call(cmd_decompress % self.compressed_directory, shell=True)
+        except:
+            print "DECOMPRESSION FAILED"
+
+        print "DECOMPRESSION COMPLETE"
+    
+    def compress(self):
 		try:
 			os.chdir(self.directory)
 			print "COMPRESSING BAG FILES"
@@ -62,11 +87,14 @@ class Bag_Archiver():
 		except:
 			print "ARCHIVE FAILED"
 
-		# Move archive to archive folder
+        # Move archive to archive folder
 		try:
 			sp.call(cmd_mv_archive)
 		except:
 			print "COULD NOT MOVE ARCHIVE"
+    
+    def unarchive(self, zip_file):
+        os.chdir(self.archive_directory)
 
 def collectArguments():
 	parser = argparse.ArgumentParser(description='Compress and archive bag files')
