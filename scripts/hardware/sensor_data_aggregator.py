@@ -84,12 +84,17 @@ def main():
     cam_1_agg = SensorDataAggregator(
         directory + "/cam_1_rgb_image",
         [("/cam_1/color/image_raw", "Image")],
-        100000000)
+        500000000)
     
     cam_2_agg = SensorDataAggregator(
         directory + "/cam_2_rgb_image",
         [("/cam_2/color/image_raw", "Image")],
-        100000000)
+        500000000)
+    
+    cam_3_agg = SensorDataAggregator(
+        directory + "/cam_3_rgb_image",
+        [("/cam_3/color/image_raw", "Image")],
+        500000000)
 
     imu_agg = SensorDataAggregator(
         directory + "/cam_2_imu",
