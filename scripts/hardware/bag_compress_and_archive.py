@@ -32,17 +32,19 @@ class BagArchiver():
 		self.unarchive_directory = unarchive_directory
 		self.compressed_directory = self.directory + '/compressed'
 
-	def change_user(new_user):
+	def change_user(self, new_user):
 		self.user = new_user
 
-	def change_bag_directory(new_directory):
+	def change_bag_directory(self, new_directory):
 		self.directory = new_directory
-		self.compressed_directory = self.directory + '/compressed'
+		
+	def change_compressed_bag_directory(self, new_directory):
+		self.compressed_directory = new_directory
 
-	def change_archive_directory(new_archive_directory):
+	def change_archive_directory(self, new_archive_directory):
 		self.archive_directory = new_archive_directory
 
-	def change_unarchive_directory(new_unarchive_directory):
+	def change_unarchive_directory(self, new_unarchive_directory):
 		self.unarchive_directory = new_unarchive_directory
 
 	def find_directory(self, directory):
@@ -51,19 +53,23 @@ class BagArchiver():
 		return False
 	
 	def create_directory(self, directory):
-		try:
-			os.mkdir(directory)
-		except OSError:
-			print "Creation of directory %s failed" % directory
+		if self.find_directory(directory) is False:
+			try:
+				os.mkdir(directory)
+			except OSError:
+				print "Creation of directory %s failed" % directory
+			else:
+				print "Successfully created the directory %s in %s" % (directory, os.path.abspath(os.getcwd()))
 		else:
-			print "Successfully created the directory %s " % directory
+			print "Directory %s already exists" % directory
     
-
     # Compresses the files in the unaltered bag file directory
 	def compress(self):
 		try:
 			os.chdir(self.directory)
 			print "COMPRESSING BAG FILES"
+			self.create_directory('compressed')
+
 			sp.call(cmd_compress % self.compressed_directory, shell=True)
 		except:
 			print "COMPRESSION FAILED"
@@ -71,7 +77,7 @@ class BagArchiver():
 		print "COMPRESSION COMPLETE"
 
 	# Archives the compressed bag files into the archive directory
-	def archive(self):
+	def archive(self, subdirectory=''):
 		# Reset cmds everytime function is called
 		cmd_mv_archive = (["mv"])
 		cmd_archive = (["tar", "czfv", "guard_user_%s_%s.tar.gz"])
@@ -80,7 +86,7 @@ class BagArchiver():
 	
 		# Set the archive filename and directory it should be moved to
 		cmd_mv_archive.append(cmd_archive[CMD_FILE_IDX])
-		cmd_mv_archive.append(self.archive_directory)
+		cmd_mv_archive.append(self.archive_directory + subdirectory)
 
 		# Select all the files to archive
 		os.chdir(self.compressed_directory)
