@@ -56,8 +56,16 @@ cd /tmp \
 
 
 
-Finally run "make all"
+Run "make all"
+
+Finally Run ./boardd
 
 
 
 NOTE: If you get any permission denied, just use sudo or sudo bash but get out of root in the later steps
+
+
+TESTS:
+
+running selfdrive/boardd/tests/replay_many.py
+running

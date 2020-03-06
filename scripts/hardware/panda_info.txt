@@ -1,0 +1,8 @@
+update rates and architure in openpilot/common/realtime.py
+
+
+list of all messages and what publish or subscribes to what is in openpilot/selfdrive/service_list.yaml
+
+
+
+to run gpsd make and then run executable, details for each process can seen in selfdrive/manager.py under the managed_processes dictionary
