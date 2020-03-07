@@ -2,9 +2,9 @@ from bag_compress_and_archive import BagArchiver
 import os
 import boto3
 
-data_directory = "/home/forest/data/"
-ignored_directories = "list.txt"
-to_upload_directories = "to_upload.txt"
+data_directory = "/home/tamim/data/"
+ignored_directories = "uploaded_datasets.txt"
+to_upload_directories = "datasets_to_upload.txt"
 
 forestai = 'forestai-guard'
 
@@ -64,7 +64,6 @@ def archive_data(directory, bagArchiver, file_tracker=None):
 
 	# Go into dataset directory
 	os.chdir(bagArchiver.directory)
-
 	archive_directory = os.path.abspath(os.getcwd())
 	print "CURRENT DIRECTORY: ", archive_directory
 
@@ -88,8 +87,9 @@ def archive_folders(list_of_directories, bagArchiver, file_tracker=None):
 		print file_tracker
 		archive_data(directory, bagArchiver, file_tracker=file_tracker)
 
-def upload_data(s3, user, files_to_upload, paths_to_read, dir_tracker):
-	with open(dir_tracker) as f:
+def upload_data(s3, user, files_to_upload, paths_to_read, file_upload_tracker):
+	lines_to_erase = []
+	with open(file_upload_tracker) as f:
 		for line in f:
 			paths_to_read.append(line.rstrip()) 
 
@@ -98,6 +98,7 @@ def upload_data(s3, user, files_to_upload, paths_to_read, dir_tracker):
 		for root, dirs, files in os.walk(path):
 			files_to_upload.append(files)
 
+		# Manipulate the strings to get the path of the tar.gz file
 		print "FILES TO UPLOAD", files_to_upload
 
 		file_to_upload = files_to_upload[0][0]
@@ -107,24 +108,38 @@ def upload_data(s3, user, files_to_upload, paths_to_read, dir_tracker):
 		path_and_file = path + '/' + file_to_upload
 		print "PATH AND FILE: ", path_and_file
 		
-		os.chdir(path)
+		try:
+			s3.meta.client.upload_file(path_and_file, forestai, ('rawdata/' + user + '/' + file_to_upload))
+			print "UPLOADED SUCCESSFULLY!" 
+			lines_to_erase.append(path)
+		except:
+			pass
 
 		files_to_upload = []
 
-        try:
-            s3.meta.client.upload_file(path_and_file, forestai, ('rawdata/' + user + '/' + file_to_upload))
-           
-            print "UPLOADED SUCCESSFULLY!" 
-            # If upload is successful, then we want to remove this from the 
-            # list of files to upload. We also want to add the directory to list.txt
-            with open(dir_tracker, 'r+') as f:
-                lines = f.readlines()
-                for line in lines:
-                    if line.rstrip() != path:
-                        f.write(line) 
-                f.truncate()
-        except:
-            print "UNABLE TO UPLOAD FILE" % path_and_file
+	print "LINES TO ERASE: ", lines_to_erase
+
+	update_file_trackers(lines_to_erase, file_archive_tracker=ignored_directories, 
+						file_upload_tracker=file_upload_tracker)
+	
+
+def update_file_trackers(lines_to_update, file_archive_tracker=None, file_upload_tracker=None):
+	if file_upload_tracker is not None:
+		# Open in read + write mode to replace lines
+		with open(file_upload_tracker, 'r+') as f:
+			f.seek(0)
+			lines = f.readlines()
+			for line in lines:
+				if line.rstrip() in lines_to_update:
+					f.write('')
+			f.truncate(0)
+
+	if file_archive_tracker is not None:
+		# Open in append mode to add on to the end
+		with open(file_archive_tracker, 'a') as f:
+			for line in lines_to_update:
+				line = os.path.basename(os.path.normpath(line))
+				f.write(line + '\n')
 
 def main():
 	# user, directory, archive_directory, unarchive_directory = collectArguments()
@@ -146,19 +161,13 @@ def main():
 
 	os.chdir(data_directory)
 	
-	# with open(to_upload_directories, "r+") as to_upload:
-	#	archive_folders(list_of_directories, bagArchiver, file_tracker=to_upload)
+	with open(to_upload_directories, "r+") as to_upload:
+		archive_folders(list_of_directories, bagArchiver, file_tracker=to_upload)
 
-	# List objects
-	# client = boto3.client('s3')  
-	# for key in client.list_objects(Bucket=forestai)['Contents']:
-	# 	print(key['Key'])
+	print "Beginning uploading process...:"
 
 	s3 = boto3.resource('s3')
-	
 	upload_data(s3, user, files_to_upload, paths_to_read, to_upload_directories)	
-
-
 
 if __name__ == '__main__':
 	main()
