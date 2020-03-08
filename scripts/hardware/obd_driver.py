@@ -14,44 +14,6 @@ gps_msg_attr = ['flags', 'latitude', 'longitude', 'altitude', 'speed', 'bearing'
 				'timestamp', 'verticalAccuracy', 'bearingAccuracy', 'speedAccuracy']
 
 
-class CorollaInterface:
-    def __init__(self):
-        self.car_params = CarInterface.get_params(CAR.COROLLA_TSS2)
-
-        self.can_poller = zmq.Poller()
-        self.can_sock = messaging.sub_sock(service_list["can"].port)
-        self.can_poller.register(self.can_sock)
-
-        self.car_state = CarState(self.car_params)
-        self.can_parser = get_can_parser(self.car_params)
-        self.vehicle_model = VehicleModel(self.car_params)
-
-        # Set CarVin because boardd checks for CarVin in params before
-        # setting the safety model; otherwise, the safety thread will wait for it
-        Params().put("CarVin", VIN_UNKNOWN)
-        Params().put("CarParams", self.car_params.to_bytes())
-
-        dbc_name = DBC[self.car_params.carFingerprint]["pt"]
-        self.messenger = CorollaMessenger(dbc_name, self.car_params)
-        self.frame = 0
-
-        self.control_data = None
-        self.sendcan = messaging.pub_sock(service_list["sendcan"].port)
-
-    def read_car_state(self):
-        can_strings = messaging.drain_sock_raw_poller(
-            self.can_poller, self.can_sock, wait_for_one=True
-        )
-        self.can_parser.update_strings(can_strings)
-        self.car_state.update(self.can_parser)
-
-        self.car_state.yaw_rate = self.vehicle_model.yaw_rate(
-            self.car_state.angle_steers * CV.DEG_TO_RAD, self.car_state.v_ego
-        )
-
-        return self.car_state
-
-
 def package_data(data, msg_type, attr_list):
 	dataIdx = 0
 

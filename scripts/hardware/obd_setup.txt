@@ -1,5 +1,10 @@
 Instructions for setting up panda
 
+export PATH="/Users/kberry/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+
+eval "$(pyenv virtualenv-init -)"
+
 run "make" in cereal directory
 
 Do all the setup in in openpilot-tools
