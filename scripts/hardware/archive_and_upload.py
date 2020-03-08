@@ -1,6 +1,7 @@
 from bag_compress_and_archive import BagArchiver
 import os
 import boto3
+import time
 
 data_directory = "/home/tamim/data/"
 ignored_directories = "uploaded_datasets.txt"
@@ -17,6 +18,8 @@ def collectArguments():
 		                help='Absolute path of directory where archives should be stored')
 	parser.add_argument('--unarchive', '-n', default=default_unarchive_directory,
 		                help='Absolute path of directory where unarchived files should be stored')
+	parser.add_argument('--time', '-t', default=None,
+						help='How often the archive and upload script should be run')
 	args = parser.parse_args()
 
 	return args.user, args.directory, args.archive, args.unarchive
@@ -84,7 +87,7 @@ def archive_data(directory, bagArchiver, file_tracker=None):
 
 def archive_folders(list_of_directories, bagArchiver, file_tracker=None):
 	for directory in list_of_directories:
-		print file_tracker
+		print file_tracker	
 		archive_data(directory, bagArchiver, file_tracker=file_tracker)
 
 def upload_data(s3, user, files_to_upload, paths_to_read, file_upload_tracker):
@@ -117,7 +120,7 @@ def upload_data(s3, user, files_to_upload, paths_to_read, file_upload_tracker):
 
 		files_to_upload = []
 
-	print "LINES TO ERASE: ", lines_to_erase
+	# print "LINES TO ERASE: ", lines_to_erase
 
 	update_file_trackers(lines_to_erase, file_archive_tracker=ignored_directories, 
 						file_upload_tracker=file_upload_tracker)
@@ -142,32 +145,43 @@ def update_file_trackers(lines_to_update, file_archive_tracker=None, file_upload
 				f.write(line + '\n')
 
 def main():
-	# user, directory, archive_directory, unarchive_directory = collectArguments()
+	# user, directory, archive_directory, unarchive_directory, sleeptime = collectArguments()
 	user = "tamim"
+	sleeptime = 20
 	archive_directory = data_directory + "archive"
 	unarchive_directory = data_directory + "unarchive"
 	bagArchiver = BagArchiver(user=user, directory=data_directory, archive_directory=archive_directory, 
 							   unarchive_directory=unarchive_directory)
-	
-	list_of_directories = []
-	list_of_uploads = []
-	files_to_upload = []
-	paths_to_read = []
-	list_of_directories, list_of_uploads = collect_directories(list_of_directories, list_of_uploads)
+	number_of_runs = 0
 
-	print "Beginning archiving process...: "
-	bagArchiver.create_directory(archive_directory)
-	bagArchiver.create_directory(unarchive_directory)
+	while(True):
+		list_of_directories = []
+		list_of_uploads = []
+		files_to_upload = []
+		paths_to_read = []
+		print "RUN NUMBER: ", number_of_runs
+		list_of_directories, list_of_uploads = collect_directories(list_of_directories, list_of_uploads)
+		if len(list_of_directories) > 0: 
+			print "Beginning archiving process...: "
+			bagArchiver.create_directory(archive_directory)
+			bagArchiver.create_directory(unarchive_directory)
 
-	os.chdir(data_directory)
-	
-	with open(to_upload_directories, "r+") as to_upload:
-		archive_folders(list_of_directories, bagArchiver, file_tracker=to_upload)
+			os.chdir(data_directory)
+		
+			with open(to_upload_directories, "r+") as to_upload:
+				archive_folders(list_of_directories, bagArchiver, file_tracker=to_upload)
 
-	print "Beginning uploading process...:"
+			print "Beginning uploading process...:"
 
-	s3 = boto3.resource('s3')
-	upload_data(s3, user, files_to_upload, paths_to_read, to_upload_directories)	
+			s3 = boto3.resource('s3')
+			upload_data(s3, user, files_to_upload, paths_to_read, to_upload_directories)
+		else:
+			print "Nothing to upload at this time..."
+
+		number_of_runs += 1
+		if sleeptime is not None:
+			print "SLEEPING"
+			time.sleep(sleeptime)	
 
 if __name__ == '__main__':
 	main()
