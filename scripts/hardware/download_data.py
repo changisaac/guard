@@ -59,7 +59,6 @@ def download_process(list_of_s3_locations):
 	download_data(s3, list_of_s3_locations)
 
 def main():
-	# user, directory, archive_directory, unarchive_directory = collectArguments()
 	# list_of_s3_locations = [['test/user1/1583536661790281234/0.jpg', 'test/user1/1583536661790281234/1.jpg']]
 	list_of_s3_locations = [['images/testuser/1583536382117/0000000001.png', 'images/testuser/1583536382117/0000000002.png'],
 							['images/testuser/1583536382117/0000000003.png', 'images/testuser/1583536382117/0000000004.png'],
