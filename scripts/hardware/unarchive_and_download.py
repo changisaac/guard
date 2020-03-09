@@ -1,80 +1,70 @@
-from bag_compress_and_archive import BagArchiver
+from time import gmtime, strftime
 import os
 import boto3
 import botocore
+import shutil
 
 data_directory = "/home/tamim/data/"
 ignored_directories = "uploaded_datasets.txt"
 to_upload_directories = "datasets_to_upload.txt"
 forestai = 'forestai-guard'
-local_copy_location = "/home/tamim/data/download/"
+download_directory = "/home/tamim/data/download/"
+# We want this to be relative path for deletion process
+download_master_directory = 'master/'
 
-def download(s3, filename, downloadname, file_tracker=None):
+def download(s3, aws_filename, downloadname, scenario_num):
 	try:
-		file = os.path.basename(os.path.normpath(filename))
-		downloadname = filename.split(file)[0]
+		file = os.path.basename(os.path.normpath(aws_filename))
+		downloadpath = aws_filename.split(file)[0]
 		# TODO: Change 'test' to the first subdirectory in bucket
-		downloadpath = downloadname.split('test/')[1]
-		if not os.path.exists(local_copy_location + downloadpath):
-			os.makedirs(local_copy_location + downloadpath)
-		full_download_path = local_copy_location + downloadpath
-
-		print "Downloading file from %s" % filename
+		# downloadpath = downloadname.split('test/')[1]
+		scenario_dir = 'scenario' + str(scenario_num)
+		full_download_path = download_directory + download_master_directory + scenario_dir  + '/' + downloadpath
+		if not os.path.exists(full_download_path):
+			os.makedirs(full_download_path)
+		
+		print "Downloading file from %s" % aws_filename
 		print "Downloading file to %s" % full_download_path
-		s3.Bucket(forestai).download_file(filename, full_download_path + '/' + file)
-
-		if file_tracker is not None:
-			file_tracker.write(full_download_path + file + '\n')
+		s3.Bucket(forestai).download_file(aws_filename, full_download_path + '/' + file)
+		return full_download_path
 	except botocore.exceptions.ClientError as e:
 	    if e.response['Error']['Code'] == "404":
 	        print("The object does not exist.")
 	    else:
 	        raise
 
-def download_data(s3, list_of_s3_locations, file_tracker=None):
-	for list in list_of_s3_locations:
-		for filename in list:
-			download(s3, filename, local_copy_location, file_tracker=file_tracker)
+def download_data(s3, list_of_s3_locations, user=None, ts=None):
+	scenario_num = 0
+	for scenario in list_of_s3_locations:
+		for aws_filename in scenario:
+			full_download_path = download(s3, aws_filename, download_directory, scenario_num)
+		scenario_num += 1
 
-def start_download(list_of_s3_locations):
+	# After iterating through all the scenarios, zip the master folder with all scenarios
+	zip_downloaded_data()
+	# After zipping the folder, delete the path
+	shutil.rmtree(download_directory + download_master_directory)
+
+def zip_downloaded_data(user=None, ts=None):
+	if user is None:
+		user = 'default-user'
+	if ts is None:
+		ts = strftime("%Y-%m-%d_%H_%M_%S", gmtime())
+	file = 'data_%s_%s' % (user, ts)
+	shutil.make_archive(file, 'zip', download_master_directory)
+	
+def download_process(list_of_s3_locations):
 	s3 = boto3.resource('s3')
-	# archive_directory = data_directory + "archive"
-	# unarchive_directory = data_directory + "unarchive"
-	# bagArchiver = BagArchiver(user=user, directory=data_directory, archive_directory=archive_directory, 
-	# 						   unarchive_directory=unarchive_directory)
-	
-	list_of_s3_locations = [['test/user1/1583536661790281234/0.jpg', 'test/user1/1583536661790281234/1.jpg']]
-
-	os.chdir(local_copy_location)
-	if os.path.isfile('downloaded_files.txt'):
-		print "File exists...!"
-	else:
-	    print "File does not exist"
-	    open('downloaded_files.txt', 'a').close()
-	    print "Created file %s" % 'downloaded_files'
-	
-	with open('downloaded_files.txt', 'a') as f:
-		download_data(s3, list_of_s3_locations, file_tracker=f)
+	os.chdir(download_directory)
+	download_data(s3, list_of_s3_locations)
 
 def main():
 	# user, directory, archive_directory, unarchive_directory = collectArguments()
-	print "HI"
-	
-	# format of directory: processed/user1/ts/*.jpegs
-
-	# download the images, then tar, and then reupload into 
-
-	# give me 2D array, list of locations of s3 
-
-	# zip them up together 
-
-	# how am I going to receive the 2D list? return the lines of jpegs, send second post req - the actual query
-	# line1, 2 and 3 -> 
-
-
-
-
-
+	# list_of_s3_locations = [['test/user1/1583536661790281234/0.jpg', 'test/user1/1583536661790281234/1.jpg']]
+	list_of_s3_locations = [['images/testuser/1583536382117/0000000001.png', 'images/testuser/1583536382117/0000000002.png'],
+							['images/testuser/1583536382117/0000000003.png', 'images/testuser/1583536382117/0000000004.png'],
+							['images/testuser/1583536382117/0000000010.png', 'images/testuser/1583536382117/0000000011.png']]
+	download_process(list_of_s3_locations)
 
 if __name__ == '__main__':
 	main()
