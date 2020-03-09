@@ -5,8 +5,6 @@ import botocore
 import shutil
 
 data_directory = "/home/forest/data/"
-ignored_directories = "uploaded_datasets.txt"
-to_upload_directories = "datasets_to_upload.txt"
 forestai = 'forestai-guard'
 download_directory = "/home/forest/data/download/"
 # We want this to be relative path for deletion process
