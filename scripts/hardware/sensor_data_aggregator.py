@@ -22,6 +22,8 @@ from sensor_msgs.msg import Image
 from sensor_msgs.msg import Imu
 from realsense2_camera.msg import IMUInfo
 
+DATA_DIR = '/home/forest/data'
+
 """
 Class subscribes to specified data topics and 
 stores all messages from those topics  to a single rosbag.
@@ -71,21 +73,24 @@ class SensorDataAggregator:
 
 def main():
     rospy.init_node("sensor_data_aggregator", anonymous=True)
-   
-    directory = os.getcwd() + "/guard_log_" + str(rospy.Time.now())
-    
+    # TODO: sync system time to GPS module time
+    # rospy.set_param("data_dir", DATA_DIR + str(rospy.Time.now()))
+
+    directory = DATA_DIR + "/guard_log_" + str(rospy.Time.now())
+
     try:
         os.mkdir(directory)
     except OSError:
-        rospy.logerr("Creation of the directory %s failed" % directory)
+        rospy.logerr("Creation of the directory %s failed" % directory) 
 
     # SensorDataAggregator relies on rospy.get_rostime()
     # this needs the node to be initialized
-    cam_1_agg = SensorDataAggregator(
-        directory + "/cam_1_rgb_image",
-        [("/cam_1/color/image_raw", "Image")],
+    cam_agg = SensorDataAggregator(
+        directory + "/camera_infra_image",
+        [("/camera/infra1/image_rect_raw", "Image")],
         500000000)
-    
+   
+    """
     cam_2_agg = SensorDataAggregator(
         directory + "/cam_2_rgb_image",
         [("/cam_2/color/image_raw", "Image")],
@@ -96,9 +101,10 @@ def main():
         [("/cam_3/color/image_raw", "Image")],
         500000000)
 
+    """
     imu_agg = SensorDataAggregator(
-        directory + "/cam_2_imu",
-        [("/cam_2/gyro/sample", "Imu")],
+        directory + "/camera_imu",
+        [("/camera/gyro/sample", "Imu")],
         50000000) 
     
     rospy.spin()

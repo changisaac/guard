@@ -16,7 +16,7 @@ class image_converter:
     self.image_pub = rospy.Publisher("image_topic_tamim",Image)
 
     self.bridge = CvBridge()
-    self.image_sub_1 = rospy.Subscriber("/cam_3/color/image_raw",Image,self.callback_1)
+    self.image_sub_1 = rospy.Subscriber("/camera/infra1/image_rect_raw",Image,self.callback_1)
     #self.image_sub_2 = rospy.Subscriber("/cam_2/color/image_raw",Image,self.callback_2)
   
   def callback_1(self,data):
