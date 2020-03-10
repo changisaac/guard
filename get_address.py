@@ -6,7 +6,7 @@ import json
 import urllib
 import xml.etree.ElementTree as ET
 
-gmaps = googlemaps.Client(key='AIzaSyD_OOP5xcr1h_PhYquy3moSgQW4FFsQueU')
+gmaps = googlemaps.Client(key='')
 """
 with open('/Users/kberry/Downloads/20200306-175204.json') as f:
   data = json.load(f)
