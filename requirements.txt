@@ -28,7 +28,7 @@ gennodejs==2.0.1
 genpy==0.6.9
 gps==3.17
 graphsurgeon==0.4.1
-httplib2==0.9.2
+httplib2==0.18.0
 idna==2.6
 image-geometry==1.13.0
 interactive-markers==1.11.4
