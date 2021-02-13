@@ -59,7 +59,7 @@ pygobject==3.26.1
 pyparsing==2.2.0
 pytest==3.3.2
 python-dateutil==2.6.1
-python-gnupg==0.4.1
+python-gnupg==0.4.4
 python-qt-binding==0.3.6
 pyxdg==0.25
 PyYAML==3.12
