@@ -54,7 +54,7 @@ py==1.5.2
 pyasn1==0.4.2
 pycairo==1.16.2
 pycrypto==2.6.1
-Pygments==2.2.0
+Pygments==2.7.4
 pygobject==3.26.1
 pyparsing==2.2.0
 pytest==3.3.2
